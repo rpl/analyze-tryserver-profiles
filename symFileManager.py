@@ -63,6 +63,10 @@ class SymFileManager:
       else:
         symFileName = libName + ".sym"
 
+      # Force loading symbols from .nmsym files if loadNMSymbols is true
+      if self.sOptions["loadNMSymbols"]:
+        symFileName = libName + ".nmsym"
+
       pathSuffix = os.sep + libName + os.sep + breakpadId + os.sep + symFileName
 
       # Look in the symbol dirs for this .sym file
@@ -107,7 +111,15 @@ class SymFileManager:
       funcCount = 0
       for line in symFile:
         lineNum += 1
-        if line[0:7] == "PUBLIC ":
+        if self.sOptions["loadNMSymbols"]:
+          ## load the symbols using the nm format if loadNMSymbols is true.
+          regex = re.compile('([^ ]+) (?:. )?(.*)')
+          match = regex.match(line)
+          if match:
+            address = int(match.group(1), 16)
+            symbolMap[address] = match.group(2)
+            funcCount += 1
+        elif line[0:7] == "PUBLIC ":
           line = line.rstrip()
           fields = line.split(" ")
           if len(fields) < 4:

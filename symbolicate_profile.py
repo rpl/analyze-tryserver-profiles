@@ -34,14 +34,22 @@ gSymbolicationOptions = {
     "THUNDERBIRD": os.path.join(os.getcwd(), "symbols_tbrd"),
     # Location of Windows library symbols
     "WINDOWS": os.path.join(os.getcwd(), "symbols_os")
-  }
+  },
+  # Load symbols from .nmsym files (defaults to False, can be enabled using --nmsym,
+  # needed to symbolicate a profile on Linux where the symbols are generated using nm).
+  "loadNMSymbols": False
 }
-
-symbolicator = symbolication.ProfileSymbolicator(gSymbolicationOptions)
 
 parser = argparse.ArgumentParser(description='Symbolicate a profile.')
 parser.add_argument("inout", nargs="+", help="files to symbolicate (will be overwritten)")
+parser.add_argument("--nmsym", action="store_true",
+                    help="load symbols from .nmsym files (to symbolicate a profile on Linux)")
 args = parser.parse_args()
+
+if args.nmsym:
+  gSymbolicationOptions["loadNMSymbols"] = True
+
+symbolicator = symbolication.ProfileSymbolicator(gSymbolicationOptions)
 
 for filename in args.inout:
   symbolicator.symbolicate_profile_file(filename)
